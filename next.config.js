@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: '/whatsapp',
+  assetPrefix: '/whatsapp',
   output: "standalone",
   eslint: {
     ignoreDuringBuilds: true,
