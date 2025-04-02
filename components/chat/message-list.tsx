@@ -3,14 +3,93 @@
 import { Message } from "@/app/types/chat";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useEffect, useRef, useState, useLayoutEffect } from "react";
 
 interface MessageListProps {
   messages: Message[];
 }
 
 export function MessageList({ messages }: MessageListProps) {
+  // Create a ref for the message container
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const totalImagesRef = useRef(0);
+
+  // Mesajlardaki toplam resim sayısını hesapla
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      totalImagesRef.current = messages.filter(msg => msg.type === 'image' && msg.mediaUrl).length;
+    }
+  }, [messages]);
+
+  // Function to scroll to bottom
+  const scrollToBottom = (force = false) => {
+    if (containerRef.current) {
+      // Doğrudan container'ı en alta kaydır
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      
+      // Eğer force ise, birkaç kez daha deneyelim
+      if (force) {
+        const scrollAttempts = [10, 50, 100, 300, 500, 1000, 2000];
+        scrollAttempts.forEach(delay => {
+          setTimeout(() => {
+            if (containerRef.current) {
+              containerRef.current.scrollTop = containerRef.current.scrollHeight;
+            }
+          }, delay);
+        });
+      }
+    }
+  };
+
+  // Resim yüklendiğinde çağrılacak fonksiyon
+  const handleImageLoad = () => {
+    setImagesLoaded(prev => {
+      const newCount = prev + 1;
+      // Eğer tüm resimler yüklendiyse, scroll yap
+      if (newCount >= totalImagesRef.current) {
+        scrollToBottom(true);
+      }
+      return newCount;
+    });
+  };
+
+  // Scroll to bottom when messages change (new message received or sent)
+  useEffect(() => {
+    // Mesajlar değiştiğinde, resim sayacını sıfırla
+    setImagesLoaded(0);
+    
+    // İlk yükleme veya mesajlar değiştiğinde scroll yap
+    scrollToBottom();
+    
+    // Biraz gecikme ile tekrar deneyelim
+    setTimeout(() => {
+      scrollToBottom();
+    }, 300);
+  }, [messages]);
+
+  // Scroll to bottom when component mounts (chat is selected)
+  useLayoutEffect(() => {
+    // Component mount olduğunda scroll yap
+    scrollToBottom(true);
+    
+    // İlk yükleme sonrası flag'i kaldır
+    setTimeout(() => {
+      setIsFirstLoad(false);
+    }, 2000);
+  }, []);
+
+  // Tüm resimler yüklendiğinde scroll yap
+  useEffect(() => {
+    if (imagesLoaded > 0 && imagesLoaded >= totalImagesRef.current) {
+      scrollToBottom(true);
+    }
+  }, [imagesLoaded]);
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.map((message) => (
         <div
           key={message.id}
@@ -36,6 +115,7 @@ export function MessageList({ messages }: MessageListProps) {
                     src={message.mediaUrl} 
                     alt="Image" 
                     className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                    onLoad={handleImageLoad}
                     onError={(e) => {
                       const target = e.currentTarget;
                       
@@ -203,6 +283,8 @@ export function MessageList({ messages }: MessageListProps) {
           </div>
         </div>
       ))}
+      {/* This empty div is used as a reference to scroll to the bottom */}
+      <div ref={messagesEndRef} />
     </div>
   );
 }

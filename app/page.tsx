@@ -333,7 +333,7 @@ export default function Home() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Select a chat to start messaging
+            Mesajlaşmaya başlamak için bir sohbet seçin
           </div>
         )}
       </div>

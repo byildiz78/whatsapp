@@ -88,7 +88,7 @@ export function MessageInput({ onSendMessage, isLoading }: MessageInputProps) {
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message"
+          placeholder="Bir mesaj yazın..."
           disabled={isLoading}
           className="min-h-[2.5rem] max-h-32 resize-none"
           onKeyDown={(e) => {

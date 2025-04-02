@@ -18,4 +18,9 @@ export interface Chat {
   avatar: string;
   status: "online" | "offline" | "typing";
   lastSeen?: string;
+  isBusiness?: boolean;
+  isUser?: boolean;
+  pushname?: string;
+  shortName?: string;
+  t?: number;
 }
