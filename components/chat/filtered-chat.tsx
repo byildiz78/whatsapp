@@ -31,7 +31,7 @@ export default function FilteredChat({ phone }: { phone: string }) {
 
   const fetchChats = async () => {
     try {
-      const response = await fetch('/api/venom/chats');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/chats`);
       if (!response.ok) {
         throw new Error('Failed to fetch chats');
       }
@@ -50,7 +50,7 @@ export default function FilteredChat({ phone }: { phone: string }) {
   const startNewChat = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/venom/start-chat', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/start-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export default function FilteredChat({ phone }: { phone: string }) {
 
   const fetchMessages = async (chatId: string) => {
     try {
-      const response = await fetch(`/api/venom/messages?chatId=${chatId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/messages?chatId=${chatId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
@@ -103,7 +103,7 @@ export default function FilteredChat({ phone }: { phone: string }) {
         formData.append('file', file);
       }
 
-      const response = await fetch('/api/venom/send', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/send`, {
         method: 'POST',
         body: formData
       });

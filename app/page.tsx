@@ -32,7 +32,7 @@ export default function Home() {
 
   const fetchChats = async () => {
     try {
-      const response = await fetch('/api/venom/chats');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/chats`);
       if (!response.ok) {
         throw new Error('Failed to fetch chats');
       }
@@ -46,7 +46,7 @@ export default function Home() {
 
   const fetchMessages = async (chatId: string) => {
     try {
-      const response = await fetch(`/api/venom/messages?chatId=${chatId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/messages?chatId=${chatId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch messages');
       }
@@ -64,7 +64,7 @@ export default function Home() {
       setIsInitializing(true);
       setAuthStatus('pending');
       
-      const response = await fetch('/api/venom/auth', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export default function Home() {
   const checkAuthStatus = async () => {
     try {
       console.log('[WhatsApp] Checking auth status...');
-      const response = await fetch('/api/venom/auth');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/auth`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -143,7 +143,7 @@ export default function Home() {
     if (!isAuthenticated) return;
     
     try {
-      const response = await fetch('/api/venom/chats');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/chats`);
       if (!response.ok) return;
       
       const data = await response.json();
@@ -160,7 +160,7 @@ export default function Home() {
 
   const pollMessages = async (chatId: string) => {
     try {
-      const response = await fetch(`/api/venom/messages?chatId=${chatId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/messages?chatId=${chatId}`);
       if (!response.ok) return;
       
       const data = await response.json();
@@ -240,7 +240,7 @@ export default function Home() {
         formData.append("file", file);
       }
 
-      const response = await fetch('/api/venom/messages', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/messages`, {
         method: 'POST',
         body: formData,
       });
