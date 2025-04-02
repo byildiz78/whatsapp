@@ -24,7 +24,7 @@ export async function initializeClient() {
       },
       {
         headless: true,
-        useChrome: true,
+        useChrome: false,
         browserArgs: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -48,8 +48,8 @@ export async function initializeClient() {
             qrCode = null;
           }
         },
-        browser: 'ChromeHeadlessNoSandbox',
-        browserPathExecutable: process.env.CHROME_BIN || '/usr/bin/google-chrome'
+        browser: 'Chromium',
+        browserPathExecutable: '/usr/bin/chromium'
       } as any
     );
     
