@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "copy-files": "node scripts/copy-files.js",
+    "build": "next build && npm run copy-files",
+    "start": "node server.js",
     "lint": "next lint"
   },
   "dependencies": {
