@@ -1,82 +1,50 @@
 import { NextResponse } from "next/server";
+import { getClient, getQrCode, initWhatsapp } from "@/app/utils/whatsapp";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-let qrCode: string | null = null;
-let client: any = null;
-let authStatus: 'pending' | 'authenticated' | 'error' = 'pending';
-let initializationAttempts = 0;
-const MAX_ATTEMPTS = 3;
-
-// Import venom-bot dynamically only on the server side
-const getVenom = async () => {
-  if (typeof window === 'undefined') {
-    const { create } = await import('venom-bot');
-    return create;
-  }
-  return null;
-};
-
 export async function GET() {
-  return NextResponse.json({
-    qrCode,
-    status: authStatus,
-    attempts: initializationAttempts
-  });
+  try {
+    const client = getClient();
+    const qrCode = getQrCode();
+
+    if (client) {
+      return NextResponse.json({ status: "authenticated" });
+    }
+
+    if (!qrCode) {
+      await initWhatsapp();
+    }
+
+    return NextResponse.json({ 
+      status: "pending",
+      qrCode: qrCode 
+    });
+  } catch (error) {
+    console.error("[WhatsApp API] Error in auth route:", error);
+    return NextResponse.json(
+      { error: "Failed to authenticate" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST() {
   try {
-    if (client) {
-      return NextResponse.json({ status: authStatus });
-    }
-
-    if (initializationAttempts >= MAX_ATTEMPTS) {
-      authStatus = 'error';
+    const client = getClient();
+    if (!client) {
       return NextResponse.json(
-        { error: 'Maximum initialization attempts reached' },
-        { status: 500 }
+        { error: "WhatsApp client not initialized" },
+        { status: 401 }
       );
     }
 
-    initializationAttempts++;
-
-    const create = await getVenom();
-    if (!create) {
-      throw new Error('Failed to load venom-bot');
-    }
-
-    client = await create({
-      session: 'whatsapp-session',
-      catchQR: (base64Qr) => {
-        qrCode = base64Qr;
-      },
-      statusFind: (status) => {
-        console.log('Status:', status);
-        if (status === 'isLogged') {
-          authStatus = 'authenticated';
-          qrCode = null;
-        } else if (status === 'notLogged') {
-          authStatus = 'pending';
-        } else if (status === 'browserClose') {
-          authStatus = 'error';
-          client = null;
-        }
-      },
-      multidevice: true,
-      headless: 'new',
-      useChrome: false,
-      debug: false
-    });
-
-    return NextResponse.json({ status: 'initializing' });
+    return NextResponse.json({ status: "authenticated" });
   } catch (error) {
-    console.error('WhatsApp Authentication Error:', error);
-    authStatus = 'error';
-    client = null;
+    console.error("[WhatsApp API] Error in auth route:", error);
     return NextResponse.json(
-      { error: 'Failed to initialize WhatsApp' },
+      { error: "Failed to authenticate" },
       { status: 500 }
     );
   }

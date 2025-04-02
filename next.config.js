@@ -3,28 +3,87 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  transpilePackages: ['qrcode-terminal'],
   webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Don't include venom-bot on client-side
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        stream: false,
-        crypto: false,
-        http: false,
-        https: false,
-        ws: false,
-        path: false,
-        net: false,
-        tls: false
-      };
+    // Ignore .cs files
+    config.module.rules.push({
+      test: /\.cs$/,
+      loader: 'ignore-loader'
+    });
+
+    // Handle dynamic requires
+    config.module.rules.push({
+      test: /\.js$/,
+      include: [
+        /node_modules\/clone-deep/,
+        /node_modules\/merge-deep/,
+        /node_modules\/puppeteer-extra/,
+        /node_modules\/venom-bot/
+      ],
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env'],
+          plugins: ['@babel/plugin-transform-runtime']
+        }
+      }
+    });
+
+    // Add rule for qrcode-terminal
+    config.module.rules.push({
+      test: /[\\/]node_modules[\\/]qrcode-terminal[\\/].*\.js$/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env'],
+        },
+      },
+    });
+
+    if (isServer) {
+      config.externals = [
+        ...(config.externals || []),
+        'puppeteer',
+        'puppeteer-core',
+        'canvas',
+        'jsdom',
+        'chrome-aws-lambda'
+      ];
+    } else {
+      config.externals = [
+        ...(config.externals || []),
+        'canvas',
+        'jsdom',
+        'puppeteer-core',
+        'chrome-aws-lambda'
+      ];
     }
+
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      child_process: false,
+      'canvas': false,
+      'utf-8-validate': false,
+      'bufferutil': false,
+      'supports-color': false,
+      'encoding': false,
+      'puppeteer': false
+    };
+
     return config;
   },
-  // Disable persistent caching to prevent ENOENT errors
   experimental: {
     // Disable webpack caching
-    webpackBuildWorker: false
+    webpackBuildWorker: false,
+    serverComponentsExternalPackages: [
+      'puppeteer',
+      'puppeteer-core',
+      'venom-bot',
+      'chrome-aws-lambda'
+    ]
   },
   // Configure webpack caching
   generateBuildId: async () => {
