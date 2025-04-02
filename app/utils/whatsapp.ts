@@ -23,7 +23,7 @@ export async function initializeClient() {
         }
       },
       {
-        headless: true,
+        headless: 'new',
         useChrome: false,
         browserArgs: [
           '--no-sandbox',
@@ -49,7 +49,20 @@ export async function initializeClient() {
           }
         },
         browser: 'Chromium',
-        browserPathExecutable: '/usr/bin/chromium'
+        browserPathExecutable: '/usr/bin/chromium',
+        puppeteerOptions: {
+          executablePath: '/usr/bin/chromium',
+          headless: 'new',
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu'
+          ]
+        }
       } as any
     );
     
