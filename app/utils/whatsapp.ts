@@ -12,18 +12,19 @@ export async function initializeClient() {
     console.log('[WhatsApp] Creating new client...');
     client = await create(
       'whatsapp-session',
-      (base64Qr) => {
+      (base64Qr: string) => {
         console.log('[WhatsApp] New QR code received');
         qrCode = base64Qr;
       },
-      (statusSession) => {
+      (statusSession: string) => {
         console.log('[WhatsApp] Status changed:', statusSession);
         if (statusSession === 'isLogged') {
           qrCode = null;
         }
       },
       {
-        headless: 'new',
+        headless: true,
+        useChrome: true,
         browserArgs: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -32,8 +33,24 @@ export async function initializeClient() {
           '--no-first-run',
           '--no-zygote',
           '--disable-gpu'
-        ]
-      }
+        ],
+        createPathFileToken: true,
+        createPathFileSession: true,
+        disableWelcome: true,
+        updatesLog: true,
+        autoClose: 0,
+        catchQR: (base64Qr: string) => {
+          qrCode = base64Qr;
+        },
+        statusFind: (statusSession: string) => {
+          console.log('[WhatsApp] Status:', statusSession);
+          if (statusSession === 'isLogged') {
+            qrCode = null;
+          }
+        },
+        browser: 'ChromeHeadlessNoSandbox',
+        browserPathExecutable: process.env.CHROME_BIN || '/usr/bin/google-chrome'
+      } as any
     );
     
     console.log('[WhatsApp] Client created successfully');
