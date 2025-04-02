@@ -23,8 +23,8 @@ export async function initializeClient() {
         }
       },
       {
-        headless: 'new',
-        useChrome: false,
+        headless: true, // Windows'ta 'new' yerine true kullanıyoruz
+        useChrome: true, // Chrome kullanımını etkinleştiriyoruz
         browserArgs: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -38,7 +38,7 @@ export async function initializeClient() {
         createPathFileSession: true,
         disableWelcome: true,
         updatesLog: true,
-        autoClose: 0,
+        autoClose: 60000, // 60 saniye sonra otomatik kapanma (0 yerine)
         catchQR: (base64Qr: string) => {
           qrCode = base64Qr;
         },
@@ -48,11 +48,11 @@ export async function initializeClient() {
             qrCode = null;
           }
         },
-        browser: 'Chromium',
-        browserPathExecutable: '/usr/bin/chromium',
+        browser: 'Chrome', // Windows'ta Chromium yerine Chrome kullanıyoruz
+        // Windows'ta browserPathExecutable ve executablePath kaldırıyoruz
+        // Venom-bot otomatik olarak Chrome'u bulacak
         puppeteerOptions: {
-          executablePath: '/usr/bin/chromium',
-          headless: 'new',
+          headless: true, // Windows'ta 'new' yerine true kullanıyoruz
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
