@@ -1,59 +1,50 @@
-import { create, Whatsapp } from "venom-bot";
-import { type LaunchOptions } from "puppeteer";
+import { create, Whatsapp } from 'venom-bot';
 
 let client: Whatsapp | null = null;
-let qrCode: string | null = null;
 
-export const getClient = () => client;
-export const getQrCode = () => qrCode;
-
-export const initWhatsapp = async () => {
-  if (client) return client;
+export async function initializeClient() {
+  if (client) {
+    return client;
+  }
 
   try {
-    const puppeteerOptions: LaunchOptions = {
-      executablePath: process.env.CHROME_BIN || process.env.PUPPETEER_EXECUTABLE_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--disable-gpu'
-      ]
-    };
-
-    client = await create("whatsapp-session", 
-      (base64Qr: string) => {
-        console.log("[WhatsApp] New QR Code received");
-        qrCode = base64Qr;
-      },
-      (status: string) => {
-        console.log("[WhatsApp] Status changed:", status);
-        if (status === "isLogged") {
-          qrCode = null;
-        }
-      },
-      {
-        browserArgs: ["--no-sandbox"],
-        disableSpins: true,
-        disableWelcome: true,
-        updatesLog: true,
-        debug: true,
-        logQR: true,
-        puppeteerOptions
+    console.log('[WhatsApp] Creating new client...');
+    client = await create('whatsapp-session', undefined, undefined, {
+      headless: 'new',
+      useChrome: false,
+      puppeteerOptions: {
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ]
       }
-    );
-
-    client.onMessage((message) => {
-      console.log("[WhatsApp] New message received:", message.body);
+    });
+    
+    console.log('[WhatsApp] Client created successfully');
+    
+    client.onStateChange((state) => {
+      console.log('[WhatsApp] Status changed:', state);
     });
 
-    console.log("[WhatsApp] Client created successfully!");
     return client;
   } catch (error) {
-    console.error("[WhatsApp] Error creating client:", error);
+    console.error('[WhatsApp] Error creating client:', error);
     throw error;
   }
-};
+}
+
+export function getClient() {
+  return client;
+}
+
+export function closeClient() {
+  if (client) {
+    client.close();
+    client = null;
+  }
+}
