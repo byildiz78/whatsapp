@@ -28,6 +28,7 @@ export default function FilteredChat({ phone }: { phone: string }) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
 
   const fetchChats = async () => {
     try {
@@ -91,6 +92,55 @@ export default function FilteredChat({ phone }: { phone: string }) {
     }
   };
 
+  const pollChats = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/chats`);
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      const filteredData = data.filter((chat: Chat) => chat.id.includes(phone));
+      setChats(filteredData);
+      
+      // Eğer seçili chat varsa, mesajlarını da güncelle
+      if (selectedChat) {
+        await pollMessages(selectedChat);
+      }
+    } catch (error) {
+      console.error('Error polling chats:', error);
+    }
+  };
+
+  const pollMessages = async (chatId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASEPATH}/api/venom/messages?chatId=${chatId}`);
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      setMessages(prev => {
+        const currentMessages = prev[chatId] || [];
+        const newMessages = data.filter(
+          (msg: Message) => !currentMessages.some(
+            (curr: Message) => curr.id === msg.id
+          )
+        );
+        
+        if (newMessages.length > 0) {
+          console.log('[WhatsApp] New messages received:', newMessages.length);
+          return {
+            ...prev,
+            [chatId]: [...currentMessages, ...newMessages]
+          };
+        }
+        
+        return prev;
+      });
+    } catch (error) {
+      console.error('Error polling messages:', error);
+    }
+  };
+
   const handleSendMessage = async (message: string, file: File | null) => {
     if (!selectedChat) return;
     
@@ -126,6 +176,22 @@ export default function FilteredChat({ phone }: { phone: string }) {
       fetchChats();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const interval = setInterval(() => {
+        setLastUpdate(Date.now());
+      }, 5000); // Her 5 saniyede bir güncelle
+      
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      pollChats();
+    }
+  }, [lastUpdate, isAuthenticated]);
 
   useEffect(() => {
     if (selectedChat) {
